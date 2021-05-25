@@ -1,0 +1,55 @@
+#RIO IO
+set_io rio_io_0 6
+set_io rio_io_3 9
+set_io rio_io_4 11
+set_io rio_io_5 13
+set_io rio_io_9 18
+set_io rio_io_10 20
+set_io rio_io_11 10
+set_io rio_io_12 12
+set_io rio_io_14 19
+set_io rio_io_15 21
+
+#RIO SPI
+set_io rio_spi_miso 14
+set_io rio_spi_sck 15
+set_io rio_spi_ss 16
+set_io rio_spi_mosi 17
+
+#RIO UART
+set_io rio_uart_tx 23
+set_io rio_uart_rx 25
+
+#USER IO LEFT BANK
+set_io user_io_0 44
+set_io user_io_1 45
+set_io user_io_2 46
+set_io user_io_3 47
+set_io user_io_4 48
+set_io user_io_5 2
+set_io user_io_6 3
+set_io user_io_7 4
+
+#USER IO RIGHT BANK
+set_io user_io_8 42
+set_io user_io_9 38
+set_io user_io_10 37
+set_io user_io_11 36
+set_io user_io_12 35
+set_io user_io_13 34
+set_io user_io_14 32
+set_io user_io_15 31
+
+#SWITCHES
+set_io sw0 28
+set_io sw1 27
+set_io sw2 26
+
+#RGB LED
+set_io rp 39
+set_io bp 41
+set_io gp 40
+
+#CLOCK
+set_io clki 43
+

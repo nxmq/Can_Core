@@ -177,102 +177,102 @@ class CanBsp extends Module with RequireAsyncReset {
   val firstCompareBit : Bool = RegInit(false.B)
 
   val errorCaptureCodeSegment : UInt = Wire(UInt(5.W))
-  val errorCaptureCodeDirection : Bool = WireDefault(!io.transmitting)
+  val errorCaptureCodeDirection : Bool = !io.transmitting
 
-  val bitDeStuff : Bool = WireDefault(bitStuffCnt === 5.U)
-  val bitDeStuffTx : Bool = WireDefault(bitStuffCntTx === 5.U)
+  val bitDeStuff : Bool = bitStuffCnt === 5.U
+  val bitDeStuffTx : Bool = bitStuffCntTx === 5.U
 
   val rule5 : Bool = Wire(Bool())
-  val lastBitOfInter : Bool = WireDefault(rxInter & (bitCnt(1,0) === 2.U))
+  val lastBitOfInter : Bool = rxInter & (bitCnt(1,0) === 2.U)
 
-  val goRxIdle : Bool = WireDefault(io.samplePoint & io.sampledBit & lastBitOfInter | busFree & !io.nodeBusOff)
-  val goRxId1 : Bool = WireDefault(io.samplePoint & !io.sampledBit & (io.rxIdle | lastBitOfInter))
-  val goRxRtr1 : Bool = WireDefault((!bitDeStuff) & io.samplePoint & rxId1 & (bitCnt(3,0) === 10.U))
-  val goRxIde : Bool = WireDefault((!bitDeStuff) & io.samplePoint & rxRtr1)
-  val goRxId2 : Bool = WireDefault((!bitDeStuff) & io.samplePoint & rxIde & io.sampledBit)
-  val goRxRtr2 : Bool = WireDefault((!bitDeStuff) & io.samplePoint & rxId2 & (bitCnt(4,0) === 17.U))
-  val goRxR1 : Bool = WireDefault((!bitDeStuff) & io.samplePoint &  rxRtr2)
-  val goRxR0 : Bool = WireDefault((!bitDeStuff) & io.samplePoint & (rxIde & (!io.sampledBit) | rxR1))
-  val goRxDlc : Bool = WireDefault((!bitDeStuff) & io.samplePoint & rxR0)
+  val goRxIdle : Bool = io.samplePoint & io.sampledBit & lastBitOfInter | busFree & !io.nodeBusOff
+  val goRxId1 : Bool = io.samplePoint & !io.sampledBit & (io.rxIdle | lastBitOfInter)
+  val goRxRtr1 : Bool = (!bitDeStuff) & io.samplePoint & rxId1 & (bitCnt(3,0) === 10.U)
+  val goRxIde : Bool = (!bitDeStuff) & io.samplePoint & rxRtr1
+  val goRxId2 : Bool = (!bitDeStuff) & io.samplePoint & rxIde & io.sampledBit
+  val goRxRtr2 : Bool = (!bitDeStuff) & io.samplePoint & rxId2 & (bitCnt(4,0) === 17.U)
+  val goRxR1 : Bool = (!bitDeStuff) & io.samplePoint &  rxRtr2
+  val goRxR0 : Bool = (!bitDeStuff) & io.samplePoint & (rxIde & (!io.sampledBit) | rxR1)
+  val goRxDlc : Bool = (!bitDeStuff) & io.samplePoint & rxR0
   val goRxData : Bool = Wire(Bool())
   val goRxCrc : Bool = Wire(Bool())
-  val goRxCrcLim : Bool = WireDefault((!bitDeStuff) & io.samplePoint & rxCrc & (bitCnt(3,0) === 14.U))
-  val goRxAck : Bool = WireDefault((!bitDeStuff) & io.samplePoint & rxCrcLim)
-  val goRxAckLim : Bool = WireDefault(io.samplePoint & rxAck)
-  val goRxEof : Bool = WireDefault(io.samplePoint & rxAckLim)
+  val goRxCrcLim : Bool = (!bitDeStuff) & io.samplePoint & rxCrc & (bitCnt(3,0) === 14.U)
+  val goRxAck : Bool = (!bitDeStuff) & io.samplePoint & rxCrcLim
+  val goRxAckLim : Bool = io.samplePoint & rxAck
+  val goRxEof : Bool = io.samplePoint & rxAckLim
   val remoteRq : Bool = ((!ide) & rtr1) | (ide & rtr2)
 
-  val goCrcEnable : Bool = WireDefault(io.hardSync | io.goTx)
-  val rstCrcEnable : Bool = WireDefault(goRxCrc)
+  val goCrcEnable : Bool = io.hardSync | io.goTx
+  val rstCrcEnable : Bool = goRxCrc
 
-  val bitDeStuffSet : Bool = WireDefault(goRxId1 & (!io.goErrorFrame))
-  val bitDeStuffReset : Bool = WireDefault(goRxAck | io.goErrorFrame | io.goOverloadFrame)
+  val bitDeStuffSet : Bool = goRxId1 & (!io.goErrorFrame)
+  val bitDeStuffReset : Bool = goRxAck | io.goErrorFrame | io.goOverloadFrame
 
-  val goEarlyTx : Bool = WireDefault((!io.listenOnlyMode) & io.needToTx & (!io.txState) & (!suspend | (suspendCnt === 7.U)) & io.samplePoint & (!io.sampledBit) & (io.rxIdle | lastBitOfInter))
+  val goEarlyTx : Bool = (!io.listenOnlyMode) & io.needToTx & (!io.txState) & (!suspend | (suspendCnt === 7.U)) & io.samplePoint & (!io.sampledBit) & (io.rxIdle | lastBitOfInter)
 
   val calculatedCrc : UInt = Wire(UInt(15.W))
-  val rCalculatedCrc : UInt = WireDefault(Reverse(calculatedCrc))
-  val limitedDataLen : UInt = WireDefault(Mux(dataLen < 8.U, dataLen , 8.U)(3,0))
-  val formErr : Bool = WireDefault(io.samplePoint & (((!bitDeStuff) & rxCrcLim & (!io.sampledBit)) |
-    (rxAckLim & (!io.sampledBit)) | ((eofCnt < 6.U)& rxEof & (!io.sampledBit) & (!io.transmitter)) | (rxEof & (!io.sampledBit) & io.transmitter)))
+  val rCalculatedCrc : UInt = Reverse(calculatedCrc)
+  val limitedDataLen : UInt = Mux(dataLen < 8.U, dataLen , 8.U)(3,0)
+  val formErr : Bool = io.samplePoint & (((!bitDeStuff) & rxCrcLim & (!io.sampledBit)) |
+    (rxAckLim & (!io.sampledBit)) | ((eofCnt < 6.U)& rxEof & (!io.sampledBit) & (!io.transmitter)) | (rxEof & (!io.sampledBit) & io.transmitter))
 
-  val bitErrCompGoRxCrc : Bool = WireDefault(bitCnt(5,0) === ((limitedDataLen(2,0)<<3).asUInt() - 1.U))
+  val bitErrCompGoRxCrc : Bool = bitCnt(5,0) === ((limitedDataLen(2,0)<<3).asUInt() - 1.U)
   goRxData := (!bitDeStuff) & io.samplePoint & rxDlc & (bitCnt(1,0) === 3.U) & (io.sampledBit | dataLen(2,0).orR()) & (!remoteRq)
   goRxCrc := (!bitDeStuff) & io.samplePoint & (rxDlc & (bitCnt(1,0) === 3.U) & ((!io.sampledBit) & (!dataLen(2,0).orR()) | remoteRq) | rxData & bitErrCompGoRxCrc)
 
-  val errorFrameEnded : Bool = WireDefault((errorCnt2 === 7.U) & io.txPoint)
-  val overloadFrameEnded : Bool = WireDefault((overloadCnt2 === 7.U) & io.txPoint)
+  val errorFrameEnded : Bool = (errorCnt2 === 7.U) & io.txPoint
+  val overloadFrameEnded : Bool = (overloadCnt2 === 7.U) & io.txPoint
   val bitErr : Bool = Wire(Bool())
-  val ackErr : Bool = WireDefault(rxAck & io.samplePoint & io.sampledBit & io.txState & (!io.selfTestMode))
-  val stuffErr : Bool = WireDefault(io.samplePoint & bitStuffCntEn & bitDeStuff & (io.sampledBit === io.sampledBitQ))
+  val ackErr : Bool = rxAck & io.samplePoint & io.sampledBit & io.txState & (!io.selfTestMode)
+  val stuffErr : Bool = io.samplePoint & bitStuffCntEn & bitDeStuff & (io.sampledBit === io.sampledBitQ)
 
   io.goRxInter := ((io.samplePoint &  rxEof  & (eofCnt === 6.U)) | errorFrameEnded | overloadFrameEnded) & (!io.overloadRequest)
 
   val idOk : Bool = Wire(Bool())
-  val noByte0 : Bool = WireDefault(rtr1 | (dataLen < 1.U))
-  val noByte1 : Bool = WireDefault(rtr1 | (dataLen < 2.U))
+  val noByte0 : Bool = rtr1 | (dataLen < 1.U)
+  val noByte1 : Bool = rtr1 | (dataLen < 2.U)
 
-  val headerLen : UInt = WireDefault(Mux(io.extendedMode, Mux(ide,5.U,3.U),2.U))
-  val storingHeader : Bool = WireDefault(headerCnt < headerLen)
-  val limitedDataLenSubOne : UInt = WireDefault(Mux(remoteRq, 0xf.U, Mux(dataLen < 8.U, dataLen - 1.U, 7.U)))
-  val resetWrFifo : Bool = WireDefault(dataCnt === (limitedDataLenSubOne + headerLen) | io.resetMode)
-  val err : Bool = WireDefault(formErr | stuffErr | bitErr | ackErr | formErrLatched | stuffErrLatched | bitErrLatched | ackErrLatched | crcErr)
+  val headerLen : UInt = Mux(io.extendedMode, Mux(ide,5.U,3.U),2.U)
+  val storingHeader : Bool = headerCnt < headerLen
+  val limitedDataLenSubOne : UInt = Mux(remoteRq, 0xf.U, Mux(dataLen < 8.U, dataLen - 1.U, 7.U))
+  val resetWrFifo : Bool = dataCnt === (limitedDataLenSubOne + headerLen) | io.resetMode
+  val err : Bool = formErr | stuffErr | bitErr | ackErr | formErrLatched | stuffErrLatched | bitErrLatched | ackErrLatched | crcErr
 
-  val arbitrationField : Bool = WireDefault(rxId1 | rxRtr1 | rxIde | rxId2 | rxRtr2)
+  val arbitrationField : Bool = rxId1 | rxRtr1 | rxIde | rxId2 | rxRtr2
 
   val rTxData : Vec[UInt] = VecInit(io.txData.map {
     v => Reverse(v)
   })
 
 
-  val basicChain : UInt = WireDefault(Cat(rTxData(1)(7,4), 0.U(2.W), rTxData(1)(3,0), rTxData(0), 0.U(1.W)))
-  val basicChainData : UInt = WireDefault(Cat(rTxData(9), rTxData(8), rTxData(7), rTxData(6), rTxData(5), rTxData(4), rTxData(3), rTxData(2)))
-  val extendedChainStd : UInt = WireDefault(Cat(rTxData(0)(7,4), 0.U(2.W), rTxData(0)(1), rTxData(2)(2,0), rTxData(1)(7,0), 0.U(1.W)))
-  val extendedChainExt : UInt = WireDefault(Cat(rTxData(0)(7,4), 0.U(2.W), rTxData(0)(1), rTxData(4)(4,0), rTxData(3)(7,0), rTxData(2)(7,3), 3.U(2.W), rTxData(2)(2,0), rTxData(1)(7,0), 0.U(1.W)))
-  val extendedChainDataStd : UInt = WireDefault(Cat(rTxData(10), rTxData(9), rTxData(8), rTxData(7), rTxData(6), rTxData(5), rTxData(4), rTxData(3)))
-  val extendedChainDataExt : UInt = WireDefault(Cat(rTxData(12), rTxData(11), rTxData(10), rTxData(9), rTxData(8), rTxData(7), rTxData(6), rTxData(5)))
+  val basicChain : UInt = Cat(rTxData(1)(7,4), 0.U(2.W), rTxData(1)(3,0), rTxData(0), 0.U(1.W))
+  val basicChainData : UInt = Cat(rTxData(9), rTxData(8), rTxData(7), rTxData(6), rTxData(5), rTxData(4), rTxData(3), rTxData(2))
+  val extendedChainStd : UInt = Cat(rTxData(0)(7,4), 0.U(2.W), rTxData(0)(1), rTxData(2)(2,0), rTxData(1)(7,0), 0.U(1.W))
+  val extendedChainExt : UInt = Cat(rTxData(0)(7,4), 0.U(2.W), rTxData(0)(1), rTxData(4)(4,0), rTxData(3)(7,0), rTxData(2)(7,3), 3.U(2.W), rTxData(2)(2,0), rTxData(1)(7,0), 0.U(1.W))
+  val extendedChainDataStd : UInt = Cat(rTxData(10), rTxData(9), rTxData(8), rTxData(7), rTxData(6), rTxData(5), rTxData(4), rTxData(3))
+  val extendedChainDataExt : UInt = Cat(rTxData(12), rTxData(11), rTxData(10), rTxData(9), rTxData(8), rTxData(7), rTxData(6), rTxData(5))
 
   io.sendAck := (!io.txState) & rxAck & (!err) & (!io.listenOnlyMode)
-  val bitErrExc1 : Bool = WireDefault(io.txState & arbitrationField & io.tx)
-  val bitErrExc2 : Bool = WireDefault(rxAck & io.tx)
-  val bitErrExc3 : Bool = WireDefault(errorFrame & io.nodeErrorPassive & (errorCnt1 < 7.U))
-  val bitErrExc4 : Bool = WireDefault((errorFrame & (errorCnt1 === 7.U) & (!enableErrorCnt2)) | (io.overloadFrame & (overloadCnt1 === 7.U) & (!enableOverloadCnt2)))
-  val bitErrExc5 : Bool = WireDefault((errorFrame & (errorCnt2 === 7.U)) | (io.overloadFrame & (overloadCnt2 === 7.U)))
-  val bitErrExc6 : Bool = WireDefault((eofCnt === 6.U) & rxEof & (!io.transmitter))
-  val errorFlagOver : Bool = WireDefault(((!io.nodeErrorPassive) & io.samplePoint & (errorCnt1 === 7.U) | io.nodeErrorPassive & io.samplePoint & (passiveCnt === 6.U)) & (!enableErrorCnt2))
-  val overloadFlagOver : Bool = WireDefault(io.samplePoint & (overloadCnt1 === 7.U) & (!enableOverloadCnt2))
+  val bitErrExc1 : Bool = io.txState & arbitrationField & io.tx
+  val bitErrExc2 : Bool = rxAck & io.tx
+  val bitErrExc3 : Bool = errorFrame & io.nodeErrorPassive & (errorCnt1 < 7.U)
+  val bitErrExc4 : Bool = (errorFrame & (errorCnt1 === 7.U) & (!enableErrorCnt2)) | (io.overloadFrame & (overloadCnt1 === 7.U) & (!enableOverloadCnt2))
+  val bitErrExc5 : Bool = (errorFrame & (errorCnt2 === 7.U)) | (io.overloadFrame & (overloadCnt2 === 7.U))
+  val bitErrExc6 : Bool = (eofCnt === 6.U) & rxEof & (!io.transmitter)
+  val errorFlagOver : Bool = ((!io.nodeErrorPassive) & io.samplePoint & (errorCnt1 === 7.U) | io.nodeErrorPassive & io.samplePoint & (passiveCnt === 6.U)) & (!enableErrorCnt2)
+  val overloadFlagOver : Bool = io.samplePoint & (overloadCnt1 === 7.U) & (!enableOverloadCnt2)
   bitErr := (io.txState | errorFrame | io.overloadFrame | rxAck) & io.samplePoint & (io.tx =/= io.sampledBit) & (!bitErrExc1) & (!bitErrExc2) & (!bitErrExc3) & (!bitErrExc4) & (!bitErrExc5) & (!bitErrExc6) & (!io.resetMode)
-  rule5 := bitErr &  ( (!io.nodeErrorPassive) & errorFrame & (errorCnt1 < 7.U) | io.overloadFrame & (overloadCnt1 < 7.U))
-  val limitedTxCntExt : UInt = WireDefault(Mux(io.txData(0)(3), 0x3f.U, (io.txData(0)(2,0) << 3).asUInt() - 1.U))
-  val limitedTxCntStd : UInt = WireDefault(Mux(io.txData(1)(3), 0x3f.U, (io.txData(1)(2,0) << 3).asUInt() - 1.U))
+  rule5 := bitErr &     ((!io.nodeErrorPassive) & errorFrame & (errorCnt1 < 7.U) | io.overloadFrame & (overloadCnt1 < 7.U))
+  val limitedTxCntExt : UInt = Mux(io.txData(0)(3), 0x3f.U, (io.txData(0)(2,0) << 3).asUInt() - 1.U)
+  val limitedTxCntStd : UInt = Mux(io.txData(1)(3), 0x3f.U, (io.txData(1)(2,0) << 3).asUInt() - 1.U)
 
-  val rstTxPointer : Bool = WireDefault(((!bitDeStuffTx) & io.txPoint & (!rxData) &   io.extendedMode &  rTxData(0)(0) & txPointer === 38.U) |   // arbitration + control for extended format
+  val rstTxPointer : Bool = ((!bitDeStuffTx) & io.txPoint & (!rxData) &   io.extendedMode &  rTxData(0)(0) & txPointer === 38.U) |   // arbitration + control for extended format
                             ((!bitDeStuffTx) & io.txPoint & (!rxData) &   io.extendedMode & !rTxData(0)(0) & txPointer === 18.U) |   // arbitration + control for extended format
-                            ((!bitDeStuffTx) & io.txPoint & (!rxData) &  !io.extendedMode                & txPointer === 18.U) |   // arbitration + control for standard format
+                            ((!bitDeStuffTx) & io.txPoint & (!rxData) &  !io.extendedMode                & txPointer === 18.U) |     // arbitration + control for standard format
                             ((!bitDeStuffTx) & io.txPoint &   rxData  &   io.extendedMode                & txPointer === limitedTxCntExt) |   // data       (overflow is OK here)
                             ((!bitDeStuffTx) & io.txPoint &   rxData  &  !io.extendedMode                & txPointer === limitedTxCntStd) |   // data       (overflow is OK here)
                             (                  io.txPoint &   rxCrcLim                                                                  ) |   // crc
-                            (goRxIdle | errorFrame | io.resetMode | io.overloadFrame))                                                        // at the end
+                            (goRxIdle | errorFrame | io.resetMode | io.overloadFrame)                                                         // at the end
 
   io.goOverloadFrame := (io.samplePoint & ((!io.sampledBit) | io.overloadRequest) & (rxEof & (!io.transmitter) & (eofCnt === 6.U) | errorFrameEnded | overloadFrameEnded) |
                          io.samplePoint & (!io.sampledBit) & io.rxInter & (bitCnt(1,0) < 2.U)                                                            |
@@ -312,7 +312,7 @@ class CanBsp extends Module with RequireAsyncReset {
     rxId2 := true.B
   }
 
-  when(goRxR1 |io.goErrorFrame) {
+  when(goRxR1 | io.goErrorFrame) {
     rxRtr2 := false.B
   }.elsewhen(goRxRtr2) {
     rxRtr2 := true.B
@@ -321,61 +321,61 @@ class CanBsp extends Module with RequireAsyncReset {
   when(goRxR0 | io.goErrorFrame) {
     rxR1 := false.B
   }.elsewhen(goRxR1) {
-    rxR1 :=true.B
+    rxR1 := true.B
   }
 
   when(goRxDlc | io.goErrorFrame) {
     rxR0 := false.B
   }.elsewhen(goRxR0) {
-    rxR0 :=true.B
+    rxR0 := true.B
   }
 
   when(goRxData | goRxCrc | io.goErrorFrame) {
     rxDlc := false.B
   }.elsewhen(goRxDlc) {
-    rxDlc :=true.B
+    rxDlc := true.B
   }
 
   when(goRxCrc | io.goErrorFrame) {
     rxData := false.B
   }.elsewhen(goRxData) {
-    rxData :=true.B
+    rxData := true.B
   }
 
   when(goRxCrcLim | io.goErrorFrame) {
     rxCrc := false.B
   }.elsewhen(goRxCrc) {
-    rxCrc :=true.B
+    rxCrc := true.B
   }
 
   when(goRxAck | io.goErrorFrame) {
     rxCrcLim := false.B
   }.elsewhen(goRxCrcLim) {
-    rxCrcLim :=true.B
+    rxCrcLim := true.B
   }
 
   when(goRxAckLim | io.goErrorFrame) {
     rxAck := false.B
   }.elsewhen(goRxAck) {
-    rxAck :=true.B
+    rxAck := true.B
   }
 
   when(goRxEof | io.goErrorFrame) {
     rxAckLim := false.B
   }.elsewhen(goRxAckLim) {
-    rxAckLim :=true.B
+    rxAckLim := true.B
   }
 
   when(io.goRxInter | io.goErrorFrame | io.goOverloadFrame) {
     rxEof := false.B
   }.elsewhen(goRxEof) {
-    rxEof :=true.B
+    rxEof := true.B
   }
 
   when(goRxIdle | goRxId1 | io.goOverloadFrame | io.goErrorFrame) {
     rxInter := false.B
   }.elsewhen(io.goRxInter) {
-    rxInter :=true.B
+    rxInter := true.B
   }
 
   when(io.samplePoint & (rxId1 | rxId2) & !bitDeStuff) {
@@ -833,7 +833,7 @@ io.setArbitrationLostIrq := arbitrationLost & (!arbitrationLostQ) & !arbitration
   }.otherwise {
     when(!io.listenOnlyMode & (!io.transmitter | arbitrationLost)) {
       when(goRxAckLim & (!io.goErrorFrame) & (!crcErr) & (io.rxErrorCount > 0.U)) {
-        when(io.rxErrorCount >127.U) {
+        when(io.rxErrorCount > 127.U) {
           rxErrorCount := 127.U
         }.otherwise {
           rxErrorCount := io.rxErrorCount - 1.U

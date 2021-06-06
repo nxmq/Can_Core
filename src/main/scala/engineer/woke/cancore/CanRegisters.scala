@@ -159,7 +159,7 @@ class CanRegisters extends Module with RequireAsyncReset {
 
   val mode: Bool = CanRegisterAsyncAndSyncReset(1,io.setResetMode,io.dataIn(0),writeEnMode).asBool()
   val modeBasic: UInt = CanRegisterAsyncReset(0,io.dataIn(4,1),writeEnMode)
-  val modeExt: UInt = WireDefault(CanRegisterAsyncReset(0,io.dataIn(3,1),writeEnMode & io.resetMode))
+  val modeExt: UInt = CanRegisterAsyncReset(0,io.dataIn(3,1),writeEnMode & io.resetMode)
   val receiveIrqEnBasic: Bool = modeBasic(0)
   val transmitIrqEnBasic: Bool = modeBasic(1)
   val errorIrqEnBasic: Bool = modeBasic(2)
@@ -170,13 +170,12 @@ class CanRegisters extends Module with RequireAsyncReset {
   io.selfTestMode := io.extendedMode & modeExt(1)
   io.acceptanceFilterMode := io.extendedMode & modeExt(2)
 
-  val commandBld: Vec[Bool] = Wire(Vec(5,Bool()))
-  val command : UInt = WireDefault(commandBld.asUInt())
-  commandBld(0) := CanRegisterAsyncAndSyncReset(0,command(0) & io.samplePoint | io.resetMode,io.dataIn(0),writeEnCommand)
-  commandBld(1) := CanRegisterAsyncAndSyncReset(0,io.samplePoint & (io.txRequest | (io.abortTx & !io.transmitting)) | io.resetMode,io.dataIn(1),writeEnCommand)
-  commandBld(2) := CanRegisterAsyncAndSyncReset(0 ,command(3) | command(2) | io.resetMode,io.dataIn(2),writeEnCommand)
-  commandBld(3) := CanRegisterAsyncAndSyncReset(0,command(3) | command(2) | io.resetMode,io.dataIn(3),writeEnCommand)
-  commandBld(4) := CanRegisterAsyncAndSyncReset(0,command(4) & io.samplePoint | io.resetMode,io.dataIn(4),writeEnCommand)
+  val command: Vec[Bool] = Wire(Vec(5,Bool()))
+  command(0) := CanRegisterAsyncAndSyncReset(0,command(0) & io.samplePoint | io.resetMode,io.dataIn(0),writeEnCommand)
+  command(1) := CanRegisterAsyncAndSyncReset(0,io.samplePoint & (io.txRequest | (io.abortTx & !io.transmitting)) | io.resetMode,io.dataIn(1),writeEnCommand)
+  command(2) := CanRegisterAsyncAndSyncReset(0 ,command(3) | command(2) | io.resetMode,io.dataIn(2),writeEnCommand)
+  command(3) := CanRegisterAsyncAndSyncReset(0,command(3) | command(2) | io.resetMode,io.dataIn(3),writeEnCommand)
+  command(4) := CanRegisterAsyncAndSyncReset(0,command(4) & io.samplePoint | io.resetMode,io.dataIn(4),writeEnCommand)
 
   when(command(4) & !command(0)) {
     selfRxRequest := true.B
@@ -265,8 +264,8 @@ class CanRegisters extends Module with RequireAsyncReset {
   io.extendedMode := CanRegisterAsyncReset(0,io.dataIn(7),writeEnClockDivHigh).asBool()
   val clockOff : Bool = CanRegisterAsyncReset(0,io.dataIn(3),writeEnClockDivHigh).asBool()
   val cd : UInt = CanRegisterAsyncReset(0,io.dataIn(2,0),writeEnClockDivLow)
-  val clkoutDiv : UInt = WireDefault(Mux(cd === 7.U, 0.U, cd))
-  val clockDivider : UInt = WireDefault(Cat(io.extendedMode,0.U(3.W),clockOff,cd))
+  val clkoutDiv : UInt = Mux(cd === 7.U, 0.U, cd)
+  val clockDivider : UInt = Cat(io.extendedMode,0.U(3.W),clockOff,cd)
 
   val clkoutCnt : UInt = RegInit(0.U(3.W))
   val clkoutTmp : Bool = RegInit(false.B)

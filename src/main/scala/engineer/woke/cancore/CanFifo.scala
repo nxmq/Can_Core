@@ -1,7 +1,7 @@
 package engineer.woke.cancore
 
 import chisel3._
-import chisel3.util.{Cat, Fill}
+import chisel3.util.{Cat}
 
 //VERIFIED CORRECT TO can_fifo.v VIA YOSYS EQUIV ON 5/1/2021, DONT FUCKING TOUCH
 class CanFifo extends Module with RequireAsyncReset {
@@ -36,10 +36,10 @@ class CanFifo extends Module with RequireAsyncReset {
   val latchOverrun : Bool = RegInit(false.B)
   val initializeMemories : Bool = RegInit(true.B)
   val lengthInfo : UInt = Wire(UInt(4.W))
-  val writeLengthInfo : Bool = WireDefault(!io.wr & wrQ)
-  val fifoEmpty : Bool = WireDefault(fifoCnt === 0.U)
-  val fifoFull : Bool = WireDefault(fifoCnt === 64.U)
-  val infoFull : Bool = WireDefault(infoCnt === 64.U)
+  val writeLengthInfo : Bool = !io.wr & wrQ
+  val fifoEmpty : Bool = fifoCnt === 0.U
+  val fifoFull : Bool = fifoCnt === 64.U
+  val infoFull : Bool = infoCnt === 64.U
   io.infoEmpty := infoCnt === 0.U
   lengthInfo := lengthFifo.read(rdInfoPointer)
   readAddress := (rdPointer + (io.addr - Mux(io.extendedMode,16.U(6.W),20.U(6.W))))

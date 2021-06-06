@@ -33,7 +33,6 @@ class CanTop extends Module with RequireAsyncReset {
   val singleShotTransmission : Bool = Wire(Bool())
   val txState : Bool = Wire(Bool())
   val txStateQ : Bool = Wire(Bool())
-  val overloadRequest : Bool = Wire(Bool())
   val overloadFrame : Bool = Wire(Bool())
 
   val readArbitrationLostCaptureReg : Bool = Wire(Bool())
@@ -93,7 +92,7 @@ class CanTop extends Module with RequireAsyncReset {
   val goTx : Bool = Wire(Bool())
   val sendAck : Bool = Wire(Bool())
   val writeEn : Bool = Wire(Bool())
-  val addr : UInt = Wire(UInt(8.W))
+  val addr : UInt = RegInit(0.U(8.W))
   val dataIn : UInt = Wire(UInt(8.W))
   val dataOut : UInt = Reg(UInt(8.W))
   val rxSyncTmp : Bool = RegNext(io.canRx,true.B)
@@ -137,7 +136,6 @@ class CanTop extends Module with RequireAsyncReset {
   canRegisters.io.txState := txState
   canRegisters.io.txStateQ := txStateQ
   canRegisters.io.txSuccessful := txSuccessful
-  overloadRequest := canRegisters.io.overloadRequest
   canRegisters.io.overloadFrame := overloadFrame
 
   readArbitrationLostCaptureReg := canRegisters.io.readArbitrationLostCaptureReg
@@ -259,7 +257,7 @@ class CanTop extends Module with RequireAsyncReset {
 
   canBsp.io.txData := canRegisters.io.txData
 
-  val dataOutFifoSelected : Bool = WireDefault(extendedMode & (!resetMode) & ((addr >= 16.U) && (addr <= 28.U)) | (!extendedMode) & ((addr >= 20.U) && (addr <= 29.U)))
+  val dataOutFifoSelected : Bool = extendedMode & (!resetMode) & ((addr >= 16.U) && (addr <= 28.U)) | (!extendedMode) & ((addr >= 20.U) && (addr <= 29.U))
 
   when(cs & !writeEn) {
       dataOut := Mux(dataOutFifoSelected,dataOutFifo,dataOutRegs)
@@ -284,7 +282,9 @@ class CanTop extends Module with RequireAsyncReset {
 
   io.wbAckO := wbAckO
   writeEn := io.wbWeI
-  addr := io.wbAddrI
+  when(io.wbStbI) {
+    addr := io.wbAddrI
+  }
   dataIn := io.wbDatI
   io.wbDatO := dataOut
 }
